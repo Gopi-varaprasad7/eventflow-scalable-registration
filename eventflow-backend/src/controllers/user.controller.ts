@@ -5,7 +5,7 @@ import { AppError } from "../utils/appError";
 import {
   createUserService,
   getUsersService,
-} from "../services/user.servic";
+} from "../services/user.service";
 
 export const createUserHandler = asyncHandler(
   async (req: Request, res: Response) => {
