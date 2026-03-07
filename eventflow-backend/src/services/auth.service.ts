@@ -1,10 +1,10 @@
-import bcrypt from 'bcrypt';
-import { pool } from '../config/db';
-import {generateToken} from '../utils/jwt';
+import bcrypt from "bcrypt";
+import { getUserByEmail } from "../repository/user.repository";
+import { generateToken } from "../utils/jwt";
 
-export const loginUser = async (email:string,password:string) => {
-    const result  = await pool.query('SELECT * FROM users WHERE email = $1',[email]);
-    const user = result.rows[0];
+export const loginUser = async (email: string, password: string) => {
+
+  const user = await getUserByEmail(email);
 
   if (!user) {
     throw new Error("User not found");
@@ -16,10 +16,14 @@ export const loginUser = async (email:string,password:string) => {
     throw new Error("Invalid credentials");
   }
 
-  const token = generateToken(user.id);
+  const token = generateToken(user, user.role);
 
   return {
-    user,
-    token
+    token,
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role
+    }
   };
-}
+};

@@ -9,7 +9,7 @@ const app = express();
 
 app.use(express.json());
 app.use("/users",userRoutes);
-app.use('/auth',authRoutes);
+app.use('/api/auth',authRoutes);
 app.use(ErrorMiddleware);
 
 initDB();

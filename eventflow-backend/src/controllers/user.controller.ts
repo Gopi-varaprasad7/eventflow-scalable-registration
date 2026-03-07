@@ -15,9 +15,9 @@ export const createUserHandler = asyncHandler(
       throw new AppError("Validation failed", 400);
     }
 
-    const { name, email } = req.body;
+    const { name, email ,password} = req.body;
 
-    const user = await createUserService(name, email);
+    const user = await createUserService(name, email,password);
 
     res.status(201).json({
       success: true,
