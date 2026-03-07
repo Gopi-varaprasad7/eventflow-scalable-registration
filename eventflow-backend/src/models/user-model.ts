@@ -20,6 +20,7 @@ export const initDB = async () => {
             location VARCHAR(200),
             event_date TIMESTAMP NOT NULL,
             created_by INTEGER REFERENCES users(id),
+            max_attendees INT DEFAULT 100,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
 `,
