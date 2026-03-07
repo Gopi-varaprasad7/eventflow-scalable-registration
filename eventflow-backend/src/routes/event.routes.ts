@@ -1,11 +1,15 @@
 import express from 'express';
 import { authenticate } from '../middlewares/auth.middleware';
-import router from './user.routes';
-import { createEventHandler ,getEventsHandler,registerEventHandler} from '../controllers/event.controller';
-const app = express.Router();
+import {
+  createEventHandler,
+  getEventsHandler,
+  registerEventHandler,
+} from '../controllers/event.controller';
 
-app.use('/create-event',authenticate,createEventHandler);
-app.use('/my-events',authenticate,getEventsHandler);
-app.use('/register-event',authenticate,registerEventHandler);
+const router = express.Router();
+
+router.post('/create-event', authenticate, createEventHandler);
+router.get('/my-events', authenticate, getEventsHandler);
+router.post('/register-event', authenticate, registerEventHandler);
 
 export default router;

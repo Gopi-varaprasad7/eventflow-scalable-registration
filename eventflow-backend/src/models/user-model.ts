@@ -31,8 +31,9 @@ export const initDB = async () => {
         event_id INTEGER REFERENCES events(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(user_id,event_id)
-)
+    )
 `);
+    console.log('Tables ready');
   } catch (err) {
     console.error('error creating table', err);
   }
