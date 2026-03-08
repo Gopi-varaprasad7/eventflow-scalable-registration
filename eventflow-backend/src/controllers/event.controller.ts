@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { redisClient } from '../config/redis';
 import { pool } from '../config/db';
 
 export const createEventHandler = async (req: any, res: any) => {
@@ -124,8 +124,18 @@ export const getAllEventsHandler = async (req: any, res: any) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-
     const offset = (page - 1) * limit;
+
+    const cacheKey = `events:${page}:${limit}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log("Serving events from Redis cache");
+      return res.json({
+        success: true,
+        source: "cache",
+        events: JSON.parse(cachedData)
+      });
+    }
 
     const result = await pool.query(
       `SELECT 
@@ -139,11 +149,11 @@ export const getAllEventsHandler = async (req: any, res: any) => {
        LIMIT $1 OFFSET $2`,
       [limit, offset],
     );
+    await redisClient.setEx(cacheKey,60,JSON.stringify(result.rows))
 
     res.json({
       success: true,
-      page,
-      limit,
+      source:"database",
       events: result.rows,
     });
   } catch (err) {
