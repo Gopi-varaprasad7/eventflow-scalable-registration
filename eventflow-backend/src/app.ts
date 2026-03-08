@@ -5,19 +5,36 @@ import { ErrorMiddleware } from './middlewares/error.middleware';
 import authRoutes from './routes/auth.routes';
 import eventRoutes from './routes/event.routes';
 import { connectRedis } from './config/redis';
+import { createRateLimiter } from './middlewares/rateLimiter';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger';
+
 const PORT = 5001;
 
 const app = express();
-connectRedis();
 
-app.use(express.json());
-app.use('/users', userRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/events', eventRoutes);
-app.use(ErrorMiddleware);
+async function startServer() {
+  await connectRedis();
 
-initDB();
+  app.use(express.json());
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log('Server running on port 5001');
-});
+  app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+  app.use('/users', userRoutes);
+
+  app.use('/api/auth', authRoutes);
+
+  // rate limiter BEFORE routes
+  app.use('/events', createRateLimiter());
+  app.use('/events', eventRoutes);
+
+  app.use(ErrorMiddleware);
+
+  await initDB();
+
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log('Server running on port 5001');
+  });
+}
+
+startServer();

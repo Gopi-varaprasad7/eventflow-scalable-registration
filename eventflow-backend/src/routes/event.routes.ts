@@ -12,9 +12,54 @@ import {
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /events:
+ *   post:
+ *     summary: Create new event
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               location:
+ *                 type: string
+ *               event_date:
+ *                 type: string
+ *               max_attendees:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Event created successfully
+ */
 router.post('/create-event', authenticate, createEventHandler);
 router.get('/my-events', authenticate, getEventsHandler);
 router.post('/register-event', authenticate, registerEventHandler);
+/**
+ * @swagger
+ * /events:
+ *   get:
+ *     summary: Get all events
+ *     description: Returns paginated list of events
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of events
+ */
 router.get('/', getAllEventsHandler);
 router.delete('/cancel-registration', authenticate, cancelRegistrationHandler);
 router.get('/:id/attendees', getEventAttendeesHandler);

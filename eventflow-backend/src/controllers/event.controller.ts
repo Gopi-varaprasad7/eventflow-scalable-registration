@@ -120,6 +120,7 @@ export const registerEventHandler = async (req: any, res: any) => {
   }
 };
 
+
 export const getAllEventsHandler = async (req: any, res: any) => {
   try {
     const page = parseInt(req.query.page) || 1;
