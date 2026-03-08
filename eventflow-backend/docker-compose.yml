@@ -4,6 +4,7 @@ services:
   app:
     build: .
     container_name: eventflow_app
+    restart: always
     ports:
       - "5001:5001"
     depends_on:
@@ -14,6 +15,9 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/eventflow
       REDIS_HOST: redis
       REDIS_PORT: 6379
+    volumes:
+      - .:/app
+      - /app/node_modules
     command: npm run dev
 
   postgres:
@@ -34,6 +38,9 @@ services:
     container_name: eventflow_redis
     ports:
       - "6379:6379"
+    volumes:
+      - redisdata:/data
 
 volumes:
   pgdata:
+  redisdata:
