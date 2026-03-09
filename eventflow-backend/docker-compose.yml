@@ -19,6 +19,17 @@ services:
       - .:/app
       - /app/node_modules
     command: npm run dev
+  
+  worker:
+    build: .
+    container_name: eventflow_worker
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    command: npm run worker
 
   postgres:
     image: postgres:15

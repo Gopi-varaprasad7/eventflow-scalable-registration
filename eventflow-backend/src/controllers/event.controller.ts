@@ -1,5 +1,6 @@
 import { redisClient } from '../config/redis';
 import { pool } from '../config/db';
+import { eventQueue } from '../queues/event.queue';
 
 export const createEventHandler = async (req: any, res: any) => {
   try {
@@ -104,7 +105,27 @@ export const registerEventHandler = async (req: any, res: any) => {
         message: 'User already registered',
       });
     }
+    const userResult = await client.query(
+      `SELECT email FROM users WHERE id = $1`,
+      [userId],
+    );
+    const eventResult2 = await client.query(
+      `SELECT title FROM events WHERE id = $1`,
+      [eventId],
+    );
+
+    if (eventResult2.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found',
+      });
+    }
     await client.query('COMMIT');
+    await eventQueue.add('send-confirmation', {
+      email: insertResult.rows[0].email,
+      eventTitle: eventResult2.rows[0].title,
+    });
     res.json({
       success: true,
       registration: insertResult.rows[0],
@@ -120,7 +141,6 @@ export const registerEventHandler = async (req: any, res: any) => {
   }
 };
 
-
 export const getAllEventsHandler = async (req: any, res: any) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -130,11 +150,11 @@ export const getAllEventsHandler = async (req: any, res: any) => {
     const cacheKey = `events:${page}:${limit}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      console.log("Serving events from Redis cache");
+      console.log('Serving events from Redis cache');
       return res.json({
         success: true,
-        source: "cache",
-        events: JSON.parse(cachedData)
+        source: 'cache',
+        events: JSON.parse(cachedData),
       });
     }
 
@@ -150,11 +170,11 @@ export const getAllEventsHandler = async (req: any, res: any) => {
        LIMIT $1 OFFSET $2`,
       [limit, offset],
     );
-    await redisClient.setEx(cacheKey,60,JSON.stringify(result.rows))
+    await redisClient.setEx(cacheKey, 60, JSON.stringify(result.rows));
 
     res.json({
       success: true,
-      source:"database",
+      source: 'database',
       events: result.rows,
     });
   } catch (err) {
@@ -222,8 +242,8 @@ export const getEventAttendeesHandler = async (req: any, res: any) => {
   }
 };
 
-export const getEventStatsHandler = async (req:any, res:any) => {
-  try{
+export const getEventStatsHandler = async (req: any, res: any) => {
+  try {
     const eventId = req.params.id;
     const result = await pool.query(
       `SELECT 
@@ -236,12 +256,12 @@ export const getEventStatsHandler = async (req:any, res:any) => {
        ON e.id = er.event_id
        WHERE e.id = $1
        GROUP BY e.id`,
-      [eventId]
+      [eventId],
     );
-     if (result.rows.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Event not found",
+        message: 'Event not found',
       });
     }
     const event = result.rows[0];
@@ -260,6 +280,5 @@ export const getEventStatsHandler = async (req:any, res:any) => {
         capacity_used_percent: usagePercent.toFixed(2),
       },
     });
-  }
-  catch(error){}
-}
+  } catch (error) {}
+};
