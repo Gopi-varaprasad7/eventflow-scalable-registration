@@ -1,149 +1,170 @@
-🚀 EventFlow – Scalable Registration Backend
-  A scalable backend system for managing events and user registrations.
-  Built with Dockerized microservices architecture using Node.js, PostegreSQL and Redis
+# EventFlow Backend
 
-🛠️ Tech Stack
-  Node.js
-  Express
-  TypeScript
-  PostgreSQL
-  Redis
-  Docker & Docker Compose
-  express-validator
+EventFlow is a scalable backend for managing events and registrations.  
+It is built using Node.js, Express, PostgreSQL, Redis, and Docker.
 
-🏗️ Architecture
-  Browser
+The project demonstrates production-ready backend architecture including caching, rate limiting, transactional operations, and API documentation.
+
+---
+
+## Features
+
+- User authentication
+- Event creation and management
+- Event registration and cancellation
+- Event capacity limits
+- Transaction-safe registration
+- Redis caching for faster responses
+- Redis-based rate limiting
+- Swagger API documentation
+- Dockerized environment
+
+---
+
+## Tech Stack
+
+Backend:
+- Node.js
+- Express.js
+- TypeScript
+
+Database:
+- PostgreSQL
+
+Caching & Rate Limiting:
+- Redis
+
+Infrastructure:
+- Docker
+- Docker Compose
+
+API Documentation:
+- Swagger
+
+---
+
+## System Architecture
+
+Client
    ↓
-  Express API (Port 5001)
+Express API
    ↓
-  PostgreSQL (Port 5432)
+Redis (Caching + Rate Limiting)
    ↓
-  Redis (Port 6379)
+PostgreSQL (Database)
 
-📂 Project Structure
-    src/
-      │
-      ├── config/
-      │   └── db.ts
-      │
-      ├── models/
-      │   └── user.model.ts
-      │
-      ├── controllers/
-      │   └── user.controller.ts
-      │
-      ├── routes/
-      │   └── user.routes.ts
-      │
-      ├── app.ts
-      └── server.ts
+---
 
-🚀 How To Run Locally
-  1.Clone the repository
-      git clone <your-repo-url>
-      cd eventflow-backend
-  2.Start docker container
-      docker compose up --build
-      
-  Server will run at: http://localhost:5001
+## Project Structure
 
-  📌 API Documentation
-    Base URL :- http://localhost:5001
-    📍 GET /users
+src/
+ ├── config/
+ │    ├── redis.ts
+ │    └── swagger.ts
+ │
+ ├── controllers/
+ │
+ ├── middlewares/
+ │    ├── auth.middleware.ts
+ │    ├── error.middleware.ts
+ │    └── rateLimiter.ts
+ │
+ ├── routes/
+ │    ├── auth.routes.ts
+ │    ├── event.routes.ts
+ │    └── user.routes.ts
+ │
+ ├── models/
+ │
+ └── app.ts
 
-Description: Returns all registered users.
-Response Type: application/json
-✅ Success Response (200)
-  {
-    "success": true,
-    "users": [
-      {
-        "id": 1,
-        "name": "Gopi",
-        "email": "gopi@test.com",
-        "created_at": "2026-03-01T05:37:01.951Z"
-      }
-    ]
-  }
-  
-📍 POST /users
+Dockerfile
+docker-compose.yml
+package.json
+tsconfig.json
 
-Description: Creates a new user.
-Request Type: application/json
-📥 Request Body
-  {
-    "name": "string",
-    "email": "string"
-  }
-✅ Success Response (200)
-  {
-    "success": true,
-    "user": {
-      "id": 1,
-      "name": "Gopi",
-      "email": "gopi@test.com",
-      "created_at": "2026-03-01T05:37:01.951Z"
-    }
-  }
-  ❌ Validation Error (400)
-  {
-    "success": false,
-    "errors": [
-      {
-        "msg": "Name is required"
-      },
-      {
-        "msg": "Invalid email"
-      }
-    ]
-  }
+---
 
-🧪 Example CURL Requests
-Create User
-  curl -X POST http://localhost:5001/users \
-    -H "Content-Type: application/json" \
-    -d '{"name":"Gopi","email":"gopi@test.com"}'
-  
-Get All Users
-  curl http://localhost:5001/users
+## Running the Project
 
-🗄️ Database Schema
-  users table
-  Column	Type	Description
-  id	SERIAL	Primary key
-  name	VARCHAR	User name
-  email	VARCHAR	Unique email address
-  created_at	TIMESTAMP	Auto-generated timestamp
+Clone the repository
 
-🔒 Validation Rules
+git clone https://github.com/YOUR_USERNAME/eventflow-backend.git
 
-  name → Required, minimum 2 characters
-  email → Required, valid email format
-  email → Must be unique
+Go to project directory
 
-📦 Docker Services
-  Service	Port	Description
-  app	5001	Express API
-  postgres	5432	Database
-  redis	6379	Cache layer
+cd eventflow-backend
 
-🎯 Future Roadmap
+Start containers
 
- Events module
- Registration system
- Authentication (JWT)
- Redis caching
- Rate limiting
- Swagger documentation
- Production multi-stage Docker build
- CI/CD pipeline
+docker compose up --build
 
-👨‍💻 Author
-  Gopi
-  Backend Engineer (Learning & Building Scalable Systems)
+Server will run at
 
-💡 Notes
+http://localhost:5001
 
-  Docker volumes ensure data persistence.
-  Validation prevents invalid data from reaching the database.
-  Project follows layered architecture (Model → Controller → Route).
+---
+
+## API Documentation
+
+Swagger documentation is available at:
+
+http://localhost:5001/docs
+
+You can test APIs directly from the browser.
+
+---
+
+## Example API Endpoints
+
+Create Event
+
+POST /events
+
+Get All Events
+
+GET /events
+
+Register for Event
+
+POST /events/:id/register
+
+Get Event Attendees
+
+GET /events/:id/attendees
+
+Event Statistics
+
+GET /events/:id/stats
+
+---
+
+## Performance Optimizations
+
+Redis caching for event listing
+
+Database indexing for faster queries
+
+Rate limiting using Redis to prevent abuse
+
+Transaction-based event registration to prevent overbooking
+
+---
+
+## Future Improvements
+
+Email notifications for event reminders
+
+Background job queues
+
+Pagination improvements
+
+Search and filtering for events
+
+Cloud deployment
+
+---
+
+## Author
+
+Built by Gopi Varaprasad Koduri
