@@ -1,6 +1,7 @@
 import { redisClient } from '../config/redis';
 import { pool } from '../config/db';
 import { eventQueue } from '../queues/event.queue';
+import { emailQueue } from '../queues/email.queue';
 
 export const createEventHandler = async (req: any, res: any) => {
   try {
@@ -52,17 +53,18 @@ export const getEventsHandler = async (req: any, res: any) => {
 
 export const registerEventHandler = async (req: any, res: any) => {
   const client = await pool.connect();
+
   try {
     const userId = req.query.id;
     const { eventId } = req.body;
+
     await client.query('BEGIN');
 
     const eventResult = await client.query(
-      `
-    SELECT max_attendees
-    FROM events
-    WHERE id = $1
-    FOR UPDATE`,
+      `SELECT max_attendees, title
+       FROM events
+       WHERE id = $1
+       FOR UPDATE`,
       [eventId],
     );
 
@@ -74,21 +76,24 @@ export const registerEventHandler = async (req: any, res: any) => {
       });
     }
 
-    const max_Attendees = eventResult.rows[0].max_attendees;
+    const maxAttendees = eventResult.rows[0].max_attendees;
+
     const countResult = await client.query(
       `SELECT COUNT(*) FROM event_registrations
        WHERE event_id = $1`,
       [eventId],
     );
-    const registered = Number(countResult.rows[0].count);
-    if (registered >= max_Attendees) {
-      await client.query('ROLLBACK');
 
+    const registered = Number(countResult.rows[0].count);
+
+    if (registered >= maxAttendees) {
+      await client.query('ROLLBACK');
       return res.status(400).json({
         success: false,
         message: 'Event is full',
       });
     }
+
     const insertResult = await client.query(
       `INSERT INTO event_registrations (user_id,event_id)
        VALUES ($1,$2)
@@ -97,35 +102,27 @@ export const registerEventHandler = async (req: any, res: any) => {
        RETURNING *`,
       [userId, eventId],
     );
+
     if (insertResult.rows.length === 0) {
       await client.query('ROLLBACK');
-
       return res.status(400).json({
         success: false,
         message: 'User already registered',
       });
     }
+
     const userResult = await client.query(
       `SELECT email FROM users WHERE id = $1`,
       [userId],
     );
-    const eventResult2 = await client.query(
-      `SELECT title FROM events WHERE id = $1`,
-      [eventId],
-    );
 
-    if (eventResult2.rows.length === 0) {
-      await client.query('ROLLBACK');
-      return res.status(404).json({
-        success: false,
-        message: 'Event not found',
-      });
-    }
     await client.query('COMMIT');
-    await eventQueue.add('send-confirmation', {
-      email: insertResult.rows[0].email,
-      eventTitle: eventResult2.rows[0].title,
+
+    await emailQueue.add('send-confirmation', {
+      email: userResult.rows[0].email,
+      eventTitle: eventResult.rows[0].title,
     });
+
     res.json({
       success: true,
       registration: insertResult.rows[0],
@@ -138,6 +135,8 @@ export const registerEventHandler = async (req: any, res: any) => {
       success: false,
       message: 'Server error',
     });
+  } finally {
+    client.release();
   }
 };
 
