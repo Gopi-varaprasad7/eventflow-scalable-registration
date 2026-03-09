@@ -89,7 +89,7 @@ tsconfig.json
 
 Clone the repository
 
-git clone https://github.com/Gopi-varaprasad7/eventflow-backend.git
+git clone https://github.com/Gopi-varaprasad7/eventflow-scalable-registration
 
 Go to project directory
 
