@@ -89,7 +89,7 @@ tsconfig.json
 
 Clone the repository
 
-git clone https://github.com/YOUR_USERNAME/eventflow-backend.git
+git clone https://github.com/Gopi-varaprasad/eventflow-backend.git
 
 Go to project directory
 
