@@ -8,6 +8,7 @@ import {
   cancelRegistrationHandler,
   getEventAttendeesHandler,
   getEventStatsHandler,
+  getWaitlistPositionHandler
 } from '../controllers/event.controller';
 
 const router = express.Router();
@@ -64,5 +65,6 @@ router.get('/', getAllEventsHandler);
 router.delete('/cancel-registration', authenticate, cancelRegistrationHandler);
 router.get('/:id/attendees', getEventAttendeesHandler);
 router.get('/:id/stats', getEventStatsHandler);
+router.get("/waitlist-position", getWaitlistPositionHandler)
 
 export default router;

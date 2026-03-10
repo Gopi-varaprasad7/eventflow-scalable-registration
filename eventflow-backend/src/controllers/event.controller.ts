@@ -87,10 +87,14 @@ export const registerEventHandler = async (req: any, res: any) => {
     const registered = Number(countResult.rows[0].count);
 
     if (registered >= maxAttendees) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({
-        success: false,
-        message: 'Event is full',
+      await client.query(
+        `INSERT INTO event_waitlist (user_id,event_id) VALUES ($1,$2)`,
+        [userId, eventId],
+      );
+      await client.query('COMMIT');
+      return res.json({
+        success: true,
+        message: 'Event full. Added to waitlist',
       });
     }
 
@@ -186,31 +190,69 @@ export const getAllEventsHandler = async (req: any, res: any) => {
 };
 
 export const cancelRegistrationHandler = async (req: any, res: any) => {
-  try {
-    const userId = req.user.id;
-    const { eventId } = req.body;
+  const client = await pool.connect();
 
-    const result = await pool.query(
-      `
-      DELETE FROM event_registrations
-      WHERE user_id = $1 AND event_id = $2 RETURNING *`,
+  let promotedUserId: number | null = null;
+
+  try {
+    const { eventId } = req.body;
+    const userId = req.query.id;
+
+    await client.query('BEGIN');
+
+    await client.query(
+      `DELETE FROM event_registrations
+       WHERE user_id=$1 AND event_id=$2`,
       [userId, eventId],
     );
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Registration not found',
+
+    const waitlistResult = await client.query(
+      `SELECT * FROM event_waitlist
+       WHERE event_id=$1
+       ORDER BY created_at
+       LIMIT 1`,
+      [eventId],
+    );
+
+    if (waitlistResult.rows.length > 0) {
+      const nextUser = waitlistResult.rows[0];
+
+      await client.query(
+        `INSERT INTO event_registrations(user_id,event_id)
+         VALUES($1,$2)`,
+        [nextUser.user_id, eventId],
+      );
+
+      await client.query(`DELETE FROM event_waitlist WHERE id=$1`, [
+        nextUser.id,
+      ]);
+
+      promotedUserId = nextUser.user_id;
+    }
+
+    await client.query('COMMIT');
+    if (promotedUserId) {
+      await emailQueue.add('waitlist-promoted', {
+        userId: promotedUserId,
+        eventId,
       });
     }
+
     res.json({
       success: true,
-      message: 'Registration cancelled successfully',
+      message: 'Registration cancelled',
     });
   } catch (error) {
+    await client.query('ROLLBACK');
+
+    console.error(error);
+
     res.status(500).json({
       success: false,
       message: 'Server error',
     });
+  } finally {
+    client.release();
   }
 };
 
@@ -281,3 +323,47 @@ export const getEventStatsHandler = async (req: any, res: any) => {
     });
   } catch (error) {}
 };
+
+
+export const getWaitlistPositionHandler = async (req:any,res:any) => {
+
+  try{
+
+    const userId = req.query.id
+    const { eventId } = req.query
+
+    const result = await pool.query(
+      `SELECT position
+       FROM (
+          SELECT user_id,
+                 ROW_NUMBER() OVER (ORDER BY created_at) AS position
+          FROM event_waitlist
+          WHERE event_id = $1
+       ) ranked
+       WHERE user_id = $2`,
+      [eventId,userId]
+    )
+
+    if(result.rows.length === 0){
+      return res.json({
+        success:false,
+        message:"User not in waitlist"
+      })
+    }
+
+    res.json({
+      success:true,
+      position: result.rows[0].position
+    })
+
+  }catch(error){
+
+    console.error(error)
+
+    res.status(500).json({
+      success:false,
+      message:"Server error"
+    })
+
+  }
+}

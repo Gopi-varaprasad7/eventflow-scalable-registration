@@ -34,6 +34,13 @@ export const initDB = async () => {
         UNIQUE(user_id,event_id)
     )
 `);
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS event_waitlist (
+        id SERIAL PRIMARY KEY,
+        user_id INT REFERENCES users(id),
+        event_id INT REFERENCES events(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`);
     console.log('Tables ready');
   } catch (err) {
     console.error('error creating table', err);
