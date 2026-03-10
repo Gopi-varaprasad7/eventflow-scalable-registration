@@ -1,4 +1,5 @@
 import express from 'express';
+import http from 'http';
 import { initDB } from './models/user-model';
 import userRoutes from './routes/user.routes';
 import { ErrorMiddleware } from './middlewares/error.middleware';
@@ -8,13 +9,16 @@ import { connectRedis } from './config/redis';
 import { createRateLimiter } from './middlewares/rateLimiter';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
+import { initSocket } from './config/socket';
 
 const PORT = 5001;
 
 const app = express();
+const server = http.createServer(app);
 
 async function startServer() {
   await connectRedis();
+  initSocket(server);
 
   app.use(express.json());
 

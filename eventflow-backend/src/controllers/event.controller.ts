@@ -1,6 +1,6 @@
 import { redisClient } from '../config/redis';
 import { pool } from '../config/db';
-import { eventQueue } from '../queues/event.queue';
+import { getIO } from '../config/socket';
 import { emailQueue } from '../queues/email.queue';
 
 export const createEventHandler = async (req: any, res: any) => {
@@ -237,6 +237,11 @@ export const cancelRegistrationHandler = async (req: any, res: any) => {
         eventId,
       });
     }
+    const io = getIO();
+
+    io.to(`event-${eventId}`).emit('waitlist-updated', {
+      eventId,
+    });
 
     res.json({
       success: true,
@@ -324,13 +329,10 @@ export const getEventStatsHandler = async (req: any, res: any) => {
   } catch (error) {}
 };
 
-
-export const getWaitlistPositionHandler = async (req:any,res:any) => {
-
-  try{
-
-    const userId = req.query.id
-    const { eventId } = req.query
+export const getWaitlistPositionHandler = async (req: any, res: any) => {
+  try {
+    const userId = req.query.id;
+    const { eventId } = req.query;
 
     const result = await pool.query(
       `SELECT position
@@ -341,29 +343,26 @@ export const getWaitlistPositionHandler = async (req:any,res:any) => {
           WHERE event_id = $1
        ) ranked
        WHERE user_id = $2`,
-      [eventId,userId]
-    )
+      [eventId, userId],
+    );
 
-    if(result.rows.length === 0){
+    if (result.rows.length === 0) {
       return res.json({
-        success:false,
-        message:"User not in waitlist"
-      })
+        success: false,
+        message: 'User not in waitlist',
+      });
     }
 
     res.json({
-      success:true,
-      position: result.rows[0].position
-    })
-
-  }catch(error){
-
-    console.error(error)
+      success: true,
+      position: result.rows[0].position,
+    });
+  } catch (error) {
+    console.error(error);
 
     res.status(500).json({
-      success:false,
-      message:"Server error"
-    })
-
+      success: false,
+      message: 'Server error',
+    });
   }
-}
+};
