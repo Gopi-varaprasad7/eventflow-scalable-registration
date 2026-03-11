@@ -25,7 +25,7 @@ export const createEventHandler = async (req: any, res: any) => {
       RETURNING *`,
       [title, description, location, event_date, max_attendees, userId],
     );
-
+    await redisClient.del("events:list");
     res.json({
       success: true,
       event: result.rows[0],
@@ -40,16 +40,41 @@ export const createEventHandler = async (req: any, res: any) => {
 };
 
 export const getEventsHandler = async (req: any, res: any) => {
-  const userId = req.user.id;
-  const result = await pool.query(
-    `
-        SELECT * FROM events WHERE created_by=$1`,
-    [userId],
-  );
-  res.json({
-    success: true,
-    events: result.rows,
-  });
+  try {
+    const cacheKey = 'events:list';
+    const cachedEvents = await redisClient.get(cacheKey);
+
+    if (cachedEvents) {
+      return res.json({
+        success: true,
+        source: 'cache',
+        events: JSON.parse(cachedEvents),
+      });
+    }
+    const result = await pool.query(
+      `SELECT * FROM events ORDER BY created_at DESC`,
+    );
+
+    const events = result.rows;
+
+    await redisClient.set(
+      cacheKey,
+      JSON.stringify(events),
+      { EX: 60 }, 
+    );
+    res.json({
+      success: true,
+      source: 'database',
+      events,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
+  }
 };
 
 export const registerEventHandler = async (req: any, res: any) => {
