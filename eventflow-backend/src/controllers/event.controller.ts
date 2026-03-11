@@ -2,6 +2,7 @@ import { redisClient } from '../config/redis';
 import { pool } from '../config/db';
 import { getIO } from '../config/socket';
 import { emailQueue } from '../queues/email.queue';
+import { redlock } from '../config/redlock';
 
 export const createEventHandler = async (req: any, res: any) => {
   try {
@@ -53,10 +54,13 @@ export const getEventsHandler = async (req: any, res: any) => {
 
 export const registerEventHandler = async (req: any, res: any) => {
   const client = await pool.connect();
+  let lock: any;
 
   try {
     const userId = req.query.id;
     const { eventId } = req.body;
+
+    lock = await redlock.acquire([`lock:event:${eventId}`], 2000);
 
     await client.query('BEGIN');
 
@@ -88,13 +92,15 @@ export const registerEventHandler = async (req: any, res: any) => {
 
     if (registered >= maxAttendees) {
       await client.query(
-        `INSERT INTO event_waitlist (user_id,event_id) VALUES ($1,$2)`,
+        `INSERT INTO event_waitlist (user_id,event_id)
+        VALUES ($1,$2)
+        ON CONFLICT (user_id,event_id) DO NOTHING`,
         [userId, eventId],
       );
       await client.query('COMMIT');
       return res.json({
         success: true,
-        message: 'Event full. Added to waitlist',
+        message: 'Event full. Added to waitlist or already in waitlist',
       });
     }
 
@@ -140,6 +146,9 @@ export const registerEventHandler = async (req: any, res: any) => {
       message: 'Server error',
     });
   } finally {
+    if (lock) {
+      await lock.release().catch(() => {});
+    }
     client.release();
   }
 };
