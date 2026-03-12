@@ -10,7 +10,9 @@ import { createRateLimiter } from './middlewares/rateLimiter';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
 import { initSocket } from './config/socket';
-import { errorHandler } from "./middlewares/errorHandler";
+import { errorHandler } from './middlewares/errorHandler';
+import { connectProducer } from './kafka/producer';
+import { startConsumer } from './kafka/consumer';
 
 const PORT = 5001;
 
@@ -20,6 +22,8 @@ const server = http.createServer(app);
 async function startServer() {
   await connectRedis();
   initSocket(server);
+  await connectProducer();
+  await startConsumer();
 
   app.use(express.json());
 

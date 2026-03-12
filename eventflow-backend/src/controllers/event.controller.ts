@@ -4,6 +4,7 @@ import { getIO } from '../config/socket';
 import { emailQueue } from '../queues/email.queue';
 import { redlock } from '../config/redlock';
 import { logger } from '../config/logger';
+import { sendEvent } from '../kafka/producer';
 
 export const createEventHandler = async (req: any, res: any) => {
   try {
@@ -153,6 +154,11 @@ export const registerEventHandler = async (req: any, res: any) => {
     await emailQueue.add('send-confirmation', {
       email: userResult.rows[0].email,
       eventTitle: eventResult.rows[0].title,
+    });
+    await sendEvent('event-registration', {
+      userId,
+      eventId,
+      registeredAt: new Date(),
     });
 
     logger.info('User registered for event', {
