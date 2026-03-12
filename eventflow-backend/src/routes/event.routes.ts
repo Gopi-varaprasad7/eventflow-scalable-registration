@@ -1,5 +1,7 @@
 import express from 'express';
 import { authenticate } from '../middlewares/auth.middleware';
+import { validate } from '../middlewares/validate';
+import { registerEventSchema } from '../validations/event.validation';
 import {
   createEventHandler,
   getEventsHandler,
@@ -41,7 +43,7 @@ const router = express.Router();
  */
 router.post('/create-event', authenticate, createEventHandler);
 router.get('/my-events', authenticate, getEventsHandler);
-router.post('/register-event', authenticate, registerEventHandler);
+router.post('/register-event', authenticate, validate(registerEventSchema),registerEventHandler);
 /**
  * @swagger
  * /events:
