@@ -10,6 +10,7 @@ import { createRateLimiter } from './middlewares/rateLimiter';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
 import { initSocket } from './config/socket';
+import { errorHandler } from "./middlewares/errorHandler";
 
 const PORT = 5001;
 
@@ -33,6 +34,7 @@ async function startServer() {
   app.use('/events', eventRoutes);
 
   app.use(ErrorMiddleware);
+  app.use(errorHandler);
 
   await initDB();
 

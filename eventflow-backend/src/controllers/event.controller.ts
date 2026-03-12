@@ -3,6 +3,7 @@ import { pool } from '../config/db';
 import { getIO } from '../config/socket';
 import { emailQueue } from '../queues/email.queue';
 import { redlock } from '../config/redlock';
+import { logger } from '../config/logger';
 
 export const createEventHandler = async (req: any, res: any) => {
   try {
@@ -25,7 +26,7 @@ export const createEventHandler = async (req: any, res: any) => {
       RETURNING *`,
       [title, description, location, event_date, max_attendees, userId],
     );
-    await redisClient.del("events:list");
+    await redisClient.del('events:list');
     res.json({
       success: true,
       event: result.rows[0],
@@ -57,11 +58,7 @@ export const getEventsHandler = async (req: any, res: any) => {
 
     const events = result.rows;
 
-    await redisClient.set(
-      cacheKey,
-      JSON.stringify(events),
-      { EX: 60 }, 
-    );
+    await redisClient.set(cacheKey, JSON.stringify(events), { EX: 60 });
     res.json({
       success: true,
       source: 'database',
@@ -158,9 +155,9 @@ export const registerEventHandler = async (req: any, res: any) => {
       eventTitle: eventResult.rows[0].title,
     });
 
-    res.json({
-      success: true,
-      registration: insertResult.rows[0],
+    logger.info('User registered for event', {
+      userId,
+      eventId,
     });
   } catch (error) {
     await client.query('ROLLBACK');
