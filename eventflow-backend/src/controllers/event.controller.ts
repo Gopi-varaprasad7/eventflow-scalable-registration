@@ -5,6 +5,8 @@ import { emailQueue } from '../queues/email.queue';
 import { redlock } from '../config/redlock';
 import { logger } from '../config/logger';
 import { sendEvent } from '../kafka/producer';
+import { TOPICS } from '../events/topics';
+import { EventRegistrationEvent } from '../events/eventTypes';
 
 export const createEventHandler = async (req: any, res: any) => {
   try {
@@ -82,6 +84,11 @@ export const registerEventHandler = async (req: any, res: any) => {
   try {
     const userId = req.query.id;
     const { eventId } = req.body;
+    const event: EventRegistrationEvent = {
+      userId,
+      eventId,
+      registeredAt: new Date().toISOString(),
+    };
 
     lock = await redlock.acquire([`lock:event:${eventId}`], 2000);
 
@@ -155,11 +162,7 @@ export const registerEventHandler = async (req: any, res: any) => {
       email: userResult.rows[0].email,
       eventTitle: eventResult.rows[0].title,
     });
-    await sendEvent('event-registration', {
-      userId,
-      eventId,
-      registeredAt: new Date(),
-    });
+    await sendEvent('event-registration', event);
 
     logger.info('User registered for event', {
       userId,

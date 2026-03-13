@@ -2,7 +2,7 @@ import { kafka } from '../config/kafka';
 
 const producer = kafka.producer();
 
-export const connectProducer = async () => {
+export const connectProducer = async<T> () => {
   await producer.connect();
   console.log('Kafka Producer Connected');
 };

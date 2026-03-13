@@ -13,6 +13,7 @@ import { initSocket } from './config/socket';
 import { errorHandler } from './middlewares/errorHandler';
 import { connectProducer } from './kafka/producer';
 import { startConsumer } from './kafka/consumer';
+import { createTopics } from './kafka/admin';
 
 const PORT = 5001;
 
@@ -21,29 +22,29 @@ const server = http.createServer(app);
 
 async function startServer() {
   await connectRedis();
-  initSocket(server);
+  await initDB();
+
+  await createTopics();
   await connectProducer();
   await startConsumer();
+
+  initSocket(server);
 
   app.use(express.json());
 
   app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
   app.use('/users', userRoutes);
-
   app.use('/api/auth', authRoutes);
 
-  // rate limiter BEFORE routes
   app.use('/events', createRateLimiter());
   app.use('/events', eventRoutes);
 
   app.use(ErrorMiddleware);
   app.use(errorHandler);
 
-  await initDB();
-
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log('Server running on port 5001');
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
   });
 }
 
