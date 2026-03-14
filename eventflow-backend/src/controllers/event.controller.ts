@@ -7,6 +7,7 @@ import { logger } from '../config/logger';
 import { sendEvent } from '../kafka/producer';
 import { TOPICS } from '../events/topics';
 import { EventRegistrationEvent } from '../events/eventTypes';
+import { v4 as uuid } from 'uuid';
 
 export const createEventHandler = async (req: any, res: any) => {
   try {
@@ -85,6 +86,7 @@ export const registerEventHandler = async (req: any, res: any) => {
     const userId = req.query.id;
     const { eventId } = req.body;
     const event: EventRegistrationEvent = {
+      registrationId: uuid(),
       userId,
       eventId,
       registeredAt: new Date().toISOString(),

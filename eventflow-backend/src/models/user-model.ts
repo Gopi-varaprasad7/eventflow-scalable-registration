@@ -41,6 +41,12 @@ export const initDB = async () => {
         event_id INT REFERENCES events(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS processed_events (
+      event_id VARCHAR PRIMARY KEY,
+      processed_at TIMESTAMP DEFAULT NOW()
+);`);
     console.log('Tables ready');
   } catch (err) {
     console.error('error creating table', err);
