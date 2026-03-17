@@ -47,6 +47,14 @@ export const initDB = async () => {
       event_id VARCHAR PRIMARY KEY,
       processed_at TIMESTAMP DEFAULT NOW()
 );`);
+
+    await pool.query(`CREATE TABLE outbox_events (
+    id UUID PRIMARY KEY,
+    topic VARCHAR NOT NULL,
+    payload JSONB NOT NULL,
+    status VARCHAR DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT NOW()
+);`);
     console.log('Tables ready');
   } catch (err) {
     console.error('error creating table', err);

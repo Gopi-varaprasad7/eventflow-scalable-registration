@@ -157,6 +157,11 @@ export const registerEventHandler = async (req: any, res: any) => {
       `SELECT email FROM users WHERE id = $1`,
       [userId],
     );
+    await client.query(
+      `INSERT INTO outbox_events (id, topic, payload)
+       VALUES ($1, $2, $3)`,
+      [uuid(), TOPICS.EVENT_REGISTRATION, JSON.stringify(event)],
+    );
 
     await client.query('COMMIT');
 

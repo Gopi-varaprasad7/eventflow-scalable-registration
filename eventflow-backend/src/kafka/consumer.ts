@@ -4,7 +4,10 @@ import { sendEvent } from './producer';
 import { EventRegistrationEvent } from '../events/eventTypes';
 import { processWithIdempotency } from '../utils/idempotency';
 
-const consumer = kafka.consumer({ groupId: 'eventflow-group' });
+const consumer = kafka.consumer({
+  groupId: 'eventflow-group',
+  allowAutoTopicCreation: true,
+});
 
 export const startConsumer = async () => {
   await consumer.connect();
@@ -13,36 +16,58 @@ export const startConsumer = async () => {
   await consumer.subscribe({ topic: TOPICS.EVENT_REGISTRATION_RETRY });
 
   await consumer.run({
-    eachMessage: async ({ topic, message }) => {
-      const data: EventRegistrationEvent = JSON.parse(
-        message.value!.toString(),
-      );
+    autoCommit: false,
 
-      try {
-        await processWithIdempotency(data.eventId, async () => {
-          console.log('Processing registration:', data);
-          if (Math.random() < 0.3) {
-            throw new Error('Random failure');
-          }
+    eachBatch: async ({
+      batch,
+      resolveOffset,
+      commitOffsetsIfNecessary,
+      heartbeat,
+      isRunning,
+      isStale,
+    }) => {
+      for (const message of batch.messages) {
+        if (!isRunning() || isStale()) break;
 
-          console.log('Processing success');
-        });
-      } catch (error) {
-        const retryCount = data.retryCount || 0;
+        const data: EventRegistrationEvent = JSON.parse(
+          message.value!.toString(),
+        );
 
-        if (retryCount < 3) {
-          console.log('Retrying event...');
+        try {
+          await processWithIdempotency(data.eventId, async () => {
+            console.log('Processing registration:', data);
 
-          await sendEvent(TOPICS.EVENT_REGISTRATION_RETRY, {
-            ...data,
-            retryCount: retryCount + 1,
+            if (Math.random() < 0.3) {
+              throw new Error('Random failure');
+            }
+
+            console.log('Processing success');
           });
-        } else {
-          console.log('Sending to DLQ');
 
-          await sendEvent(TOPICS.EVENT_REGISTRATION_DLQ, data);
+          // ✅ mark success
+          resolveOffset(message.offset);
+        } catch (error) {
+          const retryCount = data.retryCount || 0;
+
+          if (retryCount < 3) {
+            console.log('Retrying event...');
+
+            await sendEvent(TOPICS.EVENT_REGISTRATION_RETRY, {
+              ...data,
+              retryCount: retryCount + 1,
+            });
+          } else {
+            console.log('Sending to DLQ');
+
+            await sendEvent(TOPICS.EVENT_REGISTRATION_DLQ, data);
+          }
+          continue;
         }
+
+        await heartbeat();
       }
+
+      await commitOffsetsIfNecessary();
     },
   });
 };
