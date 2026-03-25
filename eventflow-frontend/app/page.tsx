@@ -5,6 +5,7 @@ import FeaturedEvents from '@/components/FeaturedEvents';
 import HowItWorks from '@/components/HowItWorks';
 import UpcomingEvents from '@/components/UpcomingEvents';
 import Testimonials from '@/components/Testimonial';
+import CTA from '@/components/CTA';
 
 export default function Home() {
   return (
@@ -16,6 +17,7 @@ export default function Home() {
       <HowItWorks />
       <UpcomingEvents />
       <Testimonials />
+      <CTA />
     </div>
   );
 }
