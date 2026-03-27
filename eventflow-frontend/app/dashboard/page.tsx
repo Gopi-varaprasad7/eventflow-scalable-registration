@@ -1,8 +1,19 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import EventCard from '@/components/EventCard';
 
 export default function DashboardPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const isAuth = localStorage.getItem('isAuth');
+
+    if (!isAuth) {
+      router.push('/login');
+    }
+  }, []);
   // Mock user data
   const user = {
     name: 'Gopi',
