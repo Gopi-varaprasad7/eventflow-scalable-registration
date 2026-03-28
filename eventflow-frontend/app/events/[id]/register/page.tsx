@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function RegisterPage({ params }: { params: { id: string } }) {
+export default function RegisterPage() {
   const [form, setForm] = useState({
     name: '',
     email: '',

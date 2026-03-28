@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { signup } from '@/src/services/authService';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -16,17 +17,20 @@ export default function SignupPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     if (!form.name || !form.email || !form.password) {
       alert('Fill all fields');
       return;
     }
-
-    // TEMP: store user locally
+    const res = await signup(form.name, form.email, form.password);
     localStorage.setItem('user', JSON.stringify(form));
 
-    alert('Signup successful 🚀');
-    router.push('/login');
+    if (res.success) {
+      alert('Signup successful');
+      router.push('/login');
+    } else {
+      alert(res.message);
+    }
   };
 
   return (

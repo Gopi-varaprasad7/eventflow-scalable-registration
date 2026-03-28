@@ -7,7 +7,6 @@ interface Props {
 }
 
 export default function EventDetails({ params }: Props) {
-  // Mock data (later replace with API)
   const event = {
     id: params.id,
     title: 'Hyderabad Marathon 2026',

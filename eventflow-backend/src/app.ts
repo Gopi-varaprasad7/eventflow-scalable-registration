@@ -1,5 +1,6 @@
 import express from 'express';
 import http from 'http';
+import cors from 'cors';
 import { initDB } from './models/user-model';
 import userRoutes from './routes/user.routes';
 import { ErrorMiddleware } from './middlewares/error.middleware';
@@ -31,6 +32,12 @@ async function startServer() {
   initSocket(server);
 
   app.use(express.json());
+  app.use(
+    cors({
+      origin: 'http://localhost:3000',
+      credentials: true,
+    }),
+  );
 
   app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

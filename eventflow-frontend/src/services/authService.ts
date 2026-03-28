@@ -1,4 +1,4 @@
-import { AwardIcon } from "lucide-react";
+
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -9,7 +9,7 @@ export async function signup(name: string, email:string,password:string) {
         password:password
     }
 
-    const res = await fetch(`${API}/auth/signup`,{
+    const res = await fetch(`${API}/users`,{
         method:"POST",
         headers:{
             "Content-Type":"application/json"
