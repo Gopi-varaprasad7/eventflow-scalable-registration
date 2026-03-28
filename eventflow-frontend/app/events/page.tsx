@@ -1,42 +1,16 @@
-// src/app/events/page.tsx
+'use client';
 
+import { useState, useEffect } from 'react';
 import EventCard from '@/components/EventCard';
+import { getEvents } from '@/src/services/eventService';
 
 export default function EventsPage() {
-  const events = [
-    {
-      id: 1,
-      title: 'Hyderabad Marathon',
-      date: 'July 12, 2026',
-      location: 'Hyderabad',
-      seats: 120,
-      image: '/events/marathon.jpg',
-    },
-    {
-      id: 2,
-      title: 'Vizag Beach Walkathon',
-      date: 'August 2, 2026',
-      location: 'Visakhapatnam',
-      seats: 80,
-      image: '/events/walkathon.jpg',
-    },
-    {
-      id: 3,
-      title: 'Bangalore Cycling Fest',
-      date: 'September 10, 2026',
-      location: 'Bangalore',
-      seats: 60,
-      image: '/events/cycling.jpg',
-    },
-    {
-      id: 4,
-      title: 'Chennai Night Run',
-      date: 'October 5, 2026',
-      location: 'Chennai',
-      seats: 40,
-      image: '/events/run.jpg',
-    },
-  ];
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    getEvents().then((data) => setEvents(data));
+    console.log(events);
+  }, []);
 
   return (
     <div className='bg-gray-50 min-h-screen'>
@@ -80,7 +54,7 @@ export default function EventsPage() {
 
         {/* Events Grid */}
         <div className='grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
-          {events.map((event) => (
+          {/* {events.map((event) => (
             <EventCard
               key={event.id}
               title={event.title}
@@ -89,7 +63,7 @@ export default function EventsPage() {
               seats={event.seats}
               image={event.image}
             />
-          ))}
+          ))} */}
         </div>
       </div>
     </div>
