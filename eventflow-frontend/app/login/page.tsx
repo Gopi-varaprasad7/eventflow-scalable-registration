@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { login } from '@/src/services/authService';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,17 +16,21 @@ export default function LoginPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleLogin = () => {
-    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const handleLogin = async () => {
+    try {
+      const res = await login(form.email, form.password);
 
-    if (
-      form.email === storedUser.email &&
-      form.password === storedUser.password
-    ) {
-      localStorage.setItem('isAuth', 'true');
-      router.push('/dashboard');
-    } else {
-      alert('Invalid credentials');
+      console.log('LOGIN RESPONSE:', res);
+
+      if (res.token) {
+        localStorage.setItem('token', res.token);
+        router.push('/dashboard');
+      } else {
+        alert(res.message || 'Login failed');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Something went wrong');
     }
   };
 

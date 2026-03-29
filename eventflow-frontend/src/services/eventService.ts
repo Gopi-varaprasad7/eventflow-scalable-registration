@@ -39,8 +39,9 @@ export async function getMyEvents() {
 
 export async function createEvent(data: any) {
   const token = localStorage.getItem('token');
+  console.log('TOKEN:', token);
 
-  const res = await fetch(`${API}/create-event`, {
+  const res = await fetch(`${API}/events/create-event`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

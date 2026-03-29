@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
+    "dev": "ts-node-dev --respawn --transpile-only --ignore-watch node_modules --ignore-watch src/config/socket.ts src/app.ts",
     "worker": "ts-node-dev src/workers/event.worker.ts",
     "build": "tsc",
     "start": "node dist/app.js"
