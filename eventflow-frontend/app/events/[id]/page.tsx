@@ -8,7 +8,7 @@ interface Props {
 
 export default function EventDetails({ params }: Props) {
   const event = {
-    id: params.id,
+    id: 1,
     title: 'Hyderabad Marathon 2026',
     date: 'July 12, 2026',
     location: 'Hyderabad',

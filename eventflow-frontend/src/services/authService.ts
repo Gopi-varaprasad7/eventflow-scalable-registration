@@ -22,7 +22,7 @@ export async function login(email: string, password: string) {
     email: email,
     password: password,
   };
-  const res = await fetch(`${API}/users`, {
+  const res = await fetch(`${API}/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
