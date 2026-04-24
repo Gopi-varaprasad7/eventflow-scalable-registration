@@ -10,14 +10,14 @@ import {
   cancelRegistrationHandler,
   getEventAttendeesHandler,
   getEventStatsHandler,
-  getWaitlistPositionHandler
+  getWaitlistPositionHandler,
 } from '../controllers/event.controller';
 
 const router = express.Router();
 
 /**
  * @swagger
- * /events:
+ * /events/create-event:
  *   post:
  *     summary: Create new event
  *     requestBody:
@@ -43,7 +43,12 @@ const router = express.Router();
  */
 router.post('/create-event', authenticate, createEventHandler);
 router.get('/my-events', authenticate, getEventsHandler);
-router.post('/register-event', authenticate, validate(registerEventSchema),registerEventHandler);
+router.post(
+  '/register-event',
+  authenticate,
+  validate(registerEventSchema),
+  registerEventHandler,
+);
 /**
  * @swagger
  * /events:
@@ -65,8 +70,8 @@ router.post('/register-event', authenticate, validate(registerEventSchema),regis
  */
 router.get('/', getAllEventsHandler);
 router.delete('/cancel-registration', authenticate, cancelRegistrationHandler);
+router.get('/waitlist-position', getWaitlistPositionHandler);
 router.get('/:id/attendees', getEventAttendeesHandler);
 router.get('/:id/stats', getEventStatsHandler);
-router.get("/waitlist-position", getWaitlistPositionHandler)
 
 export default router;
