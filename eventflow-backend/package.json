@@ -1,7 +1,7 @@
 {
   "name": "eventflow-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only --ignore-watch node_modules --ignore-watch src/config/socket.ts src/app.ts",
     "worker": "ts-node-dev src/workers/event.worker.ts",
