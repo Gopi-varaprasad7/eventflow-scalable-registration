@@ -6,7 +6,7 @@
     "dev": "ts-node-dev --respawn --transpile-only --ignore-watch node_modules --ignore-watch src/config/socket.ts src/app.ts",
     "worker": "ts-node-dev src/workers/event.worker.ts",
     "build": "tsc",
-    "start": "node dist/app.ts"
+    "start": "node dist/app.js"
   },
   "keywords": [],
   "author": "",
