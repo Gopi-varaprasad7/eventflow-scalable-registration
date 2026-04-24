@@ -74,7 +74,7 @@ async function startServer() {
   app.use('/users', userRoutes);
   app.use('/api/auth', authRoutes);
 
-  app.use('/events', createRateLimiter());
+  // app.use('/events', createRateLimiter());
   app.use('/events', eventRoutes);
 
   // ✅ Error handlers (keep last)

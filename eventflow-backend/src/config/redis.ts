@@ -1,19 +1,31 @@
-import { createClient } from "redis";
+import { createClient } from 'redis';
 
-export const redisClient = createClient({
-  socket: {
-    host: process.env.REDIS_HOST || "localhost",
-    port: Number(process.env.REDIS_PORT) || 6379,
-  },
-});
-
-redisClient.on("error", (err) => {
-  console.error("Redis error:", err);
-});
+let redisClient: any = null;
 
 export async function connectRedis() {
-  if (!redisClient.isOpen) {
+  // ❌ If no Redis config → skip completely
+  if (!process.env.REDIS_HOST) {
+    console.log('Redis disabled (no REDIS_HOST)');
+    return;
+  }
+
+  redisClient = createClient({
+    socket: {
+      host: process.env.REDIS_HOST,
+      port: Number(process.env.REDIS_PORT) || 6379,
+    },
+  });
+
+  redisClient.on('error', (err: any) => {
+    console.log('Redis error:', err.message);
+  });
+
+  try {
     await redisClient.connect();
-    console.log("Connected to Redis 🚀");
+    console.log('Connected to Redis 🚀');
+  } catch (err) {
+    console.log('Redis connection failed, skipping...');
   }
 }
+
+export { redisClient };
