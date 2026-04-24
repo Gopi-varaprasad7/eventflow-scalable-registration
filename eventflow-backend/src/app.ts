@@ -22,69 +22,77 @@ const app = express();
 const server = http.createServer(app);
 
 async function startServer() {
-  // ✅ Redis (safe fallback)
-  try {
-    await connectRedis();
-    console.log('Redis connected');
-  } catch (err) {
-    console.log('Redis not connected (skipping)');
+  async function startServer() {
+    // ✅ Redis (only if configured)
+    try {
+      await connectRedis();
+      console.log('Redis initialized');
+    } catch {
+      console.log('Redis skipped');
+    }
+
+    // ✅ Database (must work)
+    try {
+      await initDB();
+      console.log('Database connected');
+    } catch (err) {
+      console.error('Database connection failed');
+      process.exit(1);
+    }
+
+    // ✅ Kafka (ONLY if enabled)
+    if (process.env.KAFKA_ENABLED === 'true') {
+      try {
+        await createTopics();
+        await connectProducer();
+        await startConsumer();
+        console.log('Kafka connected');
+      } catch {
+        console.log('Kafka failed, skipping');
+      }
+    } else {
+      console.log('Kafka disabled');
+    }
+
+    // ✅ Socket
+    initSocket(server);
+
+    // ✅ Middlewares
+    app.use(express.json());
+
+    app.use(
+      cors({
+        origin: true,
+        credentials: true,
+      }),
+    );
+
+    // ✅ Health check
+    app.get('/', (req, res) => {
+      res.send('EventFlow API running 🚀');
+    });
+
+    // ✅ Swagger
+    app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+    // ✅ Routes
+    app.use('/users', userRoutes);
+    app.use('/api/auth', authRoutes);
+
+    // ❌ Disabled for now (Redis-based)
+    // app.use('/events', createRateLimiter());
+
+    app.use('/events', eventRoutes);
+
+    // ✅ Errors
+    app.use(ErrorMiddleware);
+    app.use(errorHandler);
+
+    // ✅ Start server
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on port ${PORT}`);
+    });
   }
-
-  // ✅ Database (must work)
-  try {
-    await initDB();
-    console.log('Database connected');
-  } catch (err) {
-    console.error('Database connection failed');
-    process.exit(1); // stop app if DB fails
-  }
-
-  // ✅ Kafka (optional for deployment)
-  try {
-    await createTopics();
-    await connectProducer();
-    await startConsumer();
-    console.log('Kafka connected');
-  } catch (err) {
-    console.log('Kafka not connected (skipping)');
-  }
-
-  // ✅ Socket
-  initSocket(server);
-
-  // ✅ Middlewares
-  app.use(express.json());
-
-  app.use(
-    cors({
-      origin: true, // allow all for now (restrict later)
-      credentials: true,
-    }),
-  );
-
-  // ✅ Health check route (IMPORTANT for Railway)
-  app.get('/', (req, res) => {
-    res.send('EventFlow API running 🚀');
-  });
-
-  // ✅ Swagger Docs
-  app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-  // ✅ Routes
-  app.use('/users', userRoutes);
-  app.use('/api/auth', authRoutes);
-
-  // app.use('/events', createRateLimiter());
-  app.use('/events', eventRoutes);
-
-  // ✅ Error handlers (keep last)
-  app.use(ErrorMiddleware);
-  app.use(errorHandler);
-
-  // ✅ Start server
-  server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
-  });
 }
 
 startServer();

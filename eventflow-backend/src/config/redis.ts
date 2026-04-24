@@ -3,9 +3,8 @@ import { createClient } from 'redis';
 let redisClient: any = null;
 
 export async function connectRedis() {
-  // ❌ If no Redis config → skip completely
   if (!process.env.REDIS_HOST) {
-    console.log('Redis disabled (no REDIS_HOST)');
+    console.log('Redis disabled');
     return;
   }
 
@@ -16,15 +15,13 @@ export async function connectRedis() {
     },
   });
 
-  redisClient.on('error', (err: any) => {
-    console.log('Redis error:', err.message);
-  });
+  redisClient.on('error', () => {}); // 🔇 silence spam
 
   try {
     await redisClient.connect();
-    console.log('Connected to Redis 🚀');
-  } catch (err) {
-    console.log('Redis connection failed, skipping...');
+    console.log('Redis connected');
+  } catch {
+    console.log('Redis skipped');
   }
 }
 
