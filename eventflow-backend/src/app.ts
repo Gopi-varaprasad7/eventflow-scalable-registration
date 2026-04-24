@@ -16,7 +16,7 @@ import { connectProducer } from './kafka/producer';
 import { startConsumer } from './kafka/consumer';
 import { createTopics } from './kafka/admin';
 
-const PORT = process.env.PORT || 5001;
+const PORT = Number(process.env.PORT) || 5001;
 
 const app = express();
 const server = http.createServer(app);
