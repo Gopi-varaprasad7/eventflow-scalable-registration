@@ -3,25 +3,40 @@ import { createClient } from 'redis';
 let redisClient: any = null;
 
 export async function connectRedis() {
-  if (!process.env.REDIS_HOST) {
+  // Railway provides REDIS_URL, Docker uses REDIS_HOST
+  const redisUrl = process.env.REDIS_URL;
+  const redisHost = process.env.REDIS_HOST;
+
+  if (!redisUrl && !redisHost) {
     console.log('Redis disabled');
     return;
   }
 
-  redisClient = createClient({
-    socket: {
-      host: process.env.REDIS_HOST,
-      port: Number(process.env.REDIS_PORT) || 6379,
-    },
-  });
+  // Railway (production) uses REDIS_URL
+  if (redisUrl) {
+    redisClient = createClient({
+      url: redisUrl,
+    });
+  }
+  // Docker (local) uses REDIS_HOST
+  else {
+    redisClient = createClient({
+      socket: {
+        host: redisHost,
+        port: Number(process.env.REDIS_PORT) || 6379,
+      },
+    });
+  }
 
-  redisClient.on('error', () => {}); // 🔇 silence spam
+  redisClient.on('error', (err: any) => {
+    console.error('Redis error:', err);
+  });
 
   try {
     await redisClient.connect();
-    console.log('Redis connected');
-  } catch {
-    console.log('Redis skipped');
+    console.log('Redis connected ✅');
+  } catch (err) {
+    console.log('Redis connection failed:', err);
   }
 }
 

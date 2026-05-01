@@ -1,0 +1,11 @@
+FROM node:20
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# Start worker instead of main app
+CMD ["node", "dist/workers/event.worker.js"]

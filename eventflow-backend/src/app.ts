@@ -79,8 +79,7 @@ async function startServer() {
     app.use('/users', userRoutes);
     app.use('/api/auth', authRoutes);
 
-    // ❌ Disabled for now (Redis-based)
-    // app.use('/events', createRateLimiter());
+    app.use('/events', createRateLimiter());
 
     app.use('/events', eventRoutes);
 
